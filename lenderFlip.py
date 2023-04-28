@@ -134,8 +134,7 @@ clanId = "10952"
 guildId = 1060597181624627284
 
 # Lenders=[Lender(328369, os.environ['FLIP-LENDER-KEY']), Lender(744782, os.environ['RAF-LENDER-KEY'])]
-# Lenders=[Lender(744782, os.environ['RAF-LENDER-KEY']), Lender(613812, os.environ['LENDER-FLIP-LENDER-KEY'])]
-Lenders=[Lender(744782, os.environ['RAF-LENDER-KEY'])]
+Lenders=[Lender(744782, os.environ['RAF-LENDER-KEY']), Lender(613812, os.environ['LENDER-FLIP-LENDER-KEY'])]
 skins = []
 charSkins = []
 ARSkins = []
@@ -176,9 +175,10 @@ class MyClient(discord.Client):
     channel = self.get_channel(1099818961182412860)
     await channel.purge(limit=None)
     await tree.sync(guild= discord.Object(id=guildId))
+    collect_rented_skins = True
     while True:
       await self.updateGame("🟡Updating Dashboard")
-      gatherSkins()
+      gatherSkins(collect_rented_skins)
       message_char = await update_message(self, channel, createDisplayTextForArr(charSkins, "Character"), message_char)
       message_sword = await update_message(self, channel, createDisplayTextForArr(SWSkins, "Sword"),  message_sword)
       message_HC = await update_message(self, channel, createDisplayTextForArr(HCSkins, "HC"),  message_HC)
@@ -186,6 +186,7 @@ class MyClient(discord.Client):
       message_LR = await update_message(self, channel, createDisplayTextForArr(LRSkins, "LR"), message_LR)
       message_BR = await update_message(self, channel, createDisplayTextForArr(BRSkins, "BR"), message_BR)
       await self.updateGame("🟢Live")
+      collect_rented_skins = False
       await asyncio.sleep(600) #Timer in seconds on how often to update dashboard. 
 
   async def updateGame(self, string):
@@ -232,8 +233,8 @@ def createDisplayTextForArr(arr, title):
   else:
     one_word_per_line = '\n'.join(list)
     stringResult = "\n>>> {}".format(one_word_per_line)
-  embed = discord.Embed(title="XBorg Skin List",
-                        url="https://ev.io/group/10952",
+  embed = discord.Embed(title="",
+                        url="",
                         description="",
                         color=discord.Color.blue())
   # embed.set_author(name="XBorg Deployment List")
@@ -358,7 +359,7 @@ async def removeSkinAndLend(skin: RentType, name: str, uid: int):
 import json
 
 #Collects all the skins in the system. 
-def gatherSkins():
+def gatherSkins(flag: int):
     charSkins.clear()
     ARSkins.clear()
     LRSkins.clear()
@@ -366,12 +367,6 @@ def gatherSkins():
     SWSkins.clear()
     HCSkins.clear()
 
-    activeARSkins.clear()
-    activeLRSkins.clear()
-    activeBRSkins.clear()
-    activeSWSkins.clear()
-    activeHCSkins.clear()
-    activecharSkins.clear()
     for obj in Lenders:
       filterUrl = "https://ev.io/flags/" + str(obj.id)
       response = requests.request("GET", filterUrl, headers=headers)
@@ -387,10 +382,10 @@ def gatherSkins():
           else:
             earnedToday = int(item["field_earned_today"])
           skinsArr.append(Skin(item["id"],item["field_skin"],item["field_flag_nft_address"],item["field_scholar"].lower(), obj.id, obj.ownerID, earnedToday, meta_data["value"]["attributes"][1]["value"])) 
-          if item["field_scholar"] != "":          
+          if item["field_scholar"] != "" and flag == True:          
             activeSkinsArr.append(Skin(item["id"],item["field_skin"],item["field_flag_nft_address"],item["field_scholar"].lower(), obj.id, obj.ownerID, earnedToday, meta_data["value"]["attributes"][1]["value"])) 
     #print views to see who has which skins
-    #print(activeLRSkins)
+    # print(activeLRSkins)
 
       
 client.run(os.environ['DISCORD-TOKEN'])
