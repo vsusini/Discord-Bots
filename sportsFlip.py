@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from discord.ext import commands
 from discord import app_commands
+from typing import List
 import asyncio
 
 load_dotenv()
@@ -20,9 +21,11 @@ headers = {
 
 headers = {'User-Agent': 'Mozilla/5.0'}
 
-guildId = 952044361334550548
-
 from enum import Enum
+
+#Data
+
+guildId = 952044361334550548
 
 
 class GameType(Enum):
@@ -31,6 +34,43 @@ class GameType(Enum):
     NHL = "NHL"
     NBA = "NBA"
 
+class Teams(Enum):
+    Arizona_Diamondbacks = 2
+    Atlanta_Braves = 3
+    Baltimore_Orioles = 4
+    Boston_Red_Sox = 5
+    Chicago_Cubs = 6
+    Chicago_White_Sox = 7
+    Cincinati_Reds = 8
+    Cleveland_Indians = 9
+    Colorado_Rockies = 10
+    Detriot_Tigers = 12
+    Houston_Astros = 15
+    Kansas_City_Royals = 16
+    Los_Angles_Angels = 17
+    Los_Angles_Dodgers = 18
+    Miami_Marlins = 19
+    Milwaukee_Brewers = 20
+    Minnesota_Twins = 22
+    New_York_Mets = 24
+    New_York_Yankees = 25
+    Oakland_Athletics = 26
+    Philadelphia_Phillies = 27
+    Pittsburgh_Pirates = 28
+    San_Diego_Padres = 30
+    San_Francisco_Giants = 31
+    Seattle_Mariners = 32
+    St_Louis_Cardinals = 33
+    Tampa_Bay_Rays = 34
+    Texas_Rangers = 35
+    Toronto_Blue_Jays = 36
+    Washington_Nationals = 37
+
+
+currentGameType = None
+currentTeams = []
+
+# Code
 
 class MyClient(discord.Client):
   def __init__(self, *args, **kwargs):
@@ -40,7 +80,8 @@ class MyClient(discord.Client):
     print(f"Logged in as {self.user}")
     await self.updateGame("🟢Live")
     channel = self.get_channel(1099818961182412860)
-    await tree.sync(guild= discord.Object(id=guildId))
+    for guild in self.guilds:
+      await tree.sync(guild= discord.Object(id=guild.id))
 
 
   async def updateGame(self, string):
@@ -50,33 +91,51 @@ class MyClient(discord.Client):
                                   type=discord.ActivityType.watching,
                                   name=str(string)))
 
-async def send_message(this,channel, content):
-  await channel.send(content=content)
-
-async def update_message(this, channel, content, message):
-  if message == None:
-    message = await channel.send(embed=content)
-  else:
-    print("Trying to edit message.")
-    try:
-      await message.edit(embed=content)
-    except: 
-      print("Message may be getting limited.")
-      await asyncio.sleep(30)
-      await message.edit(embed=content)
-  return message
-
 client = MyClient(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
 
-#Lending
-@tree.command(name = "test", description = "Rent a skin from the collection.", guild=discord.Object(id=guildId))
+@tree.command(name = "get_current_games", description = "Get today's scores for the specific sport", guild=discord.Object(id=guildId))
 async def rent(interaction, type: GameType):
-  #Check if the player exists.
 
-  if (type == GameType.MLB):
+  if currentTeams == []:
+    await interaction.response.send_message("No on-going games to display data for")
+
+  if (currentGameType == GameType.MLB):
     await createMLBText(interaction)
+  if (currentGameType == GameType.NBA):
+    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
+  if (currentGameType == GameType.NHL):
+    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
+  if (currentGameType == GameType.NFL):
+    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
 
+@tree.command(name = "create_game_one", description = "Get today's scores for the specific sport", guild=discord.Object(id=guildId))
+async def help(interaction, type: GameType, team_in_game: Teams):
+    if await checkIfValidUser(interaction):
+      return
+    currentGameType = type
+    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
+
+@tree.command(name = "get_flips_state", description = "Get today's scores for the specific sport", guild=discord.Object(id=guildId))
+async def help(interaction):
+    if await checkIfValidUser(interaction):
+      return
+    await interaction.response.send_message(f"Storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
+
+@tree.command(name = "reset_state", description = "Get today's scores for the specific sport", guild=discord.Object(id=guildId))
+async def reset(interaction):
+    if await checkIfValidUser(interaction):
+      return
+    currentGameType = None
+    currentTeams = []
+    await interaction.response.send_message(f"I have been reset. Storing games for sport: {currentGameType} and teams: {currentTeams}", ephemeral=True)
+
+
+async def checkIfValidUser(interaction):
+  if "SF Master" not in [role.name for role in interaction.user.roles]:
+      await interaction.response.send_message(f"Silly {interaction.user}, you don't have permissions to do this command!", ephemeral=True)
+      return True
+  return False
     
   
 async def createMLBText(interaction):
