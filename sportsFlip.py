@@ -34,38 +34,36 @@ class GameType(Enum):
     NHL = "NHL"
     NBA = "NBA"
 
-class Teams(Enum):
-    Arizona_Diamondbacks = 2
-    Atlanta_Braves = 3
-    Baltimore_Orioles = 4
-    Boston_Red_Sox = 5
-    Chicago_Cubs = 6
-    Chicago_White_Sox = 7
-    Cincinati_Reds = 8
-    Cleveland_Indians = 9
-    Colorado_Rockies = 10
-    Detriot_Tigers = 12
-    Houston_Astros = 15
-    Kansas_City_Royals = 16
-    Los_Angles_Angels = 17
-    Los_Angles_Dodgers = 18
-    Miami_Marlins = 19
-    Milwaukee_Brewers = 20
-    Minnesota_Twins = 22
-    New_York_Mets = 24
-    New_York_Yankees = 25
-    Oakland_Athletics = 26
-    Philadelphia_Phillies = 27
-    Pittsburgh_Pirates = 28
-    San_Diego_Padres = 30
-    San_Francisco_Giants = 31
-    Seattle_Mariners = 32
-    St_Louis_Cardinals = 33
-    Tampa_Bay_Rays = 34
-    Texas_Rangers = 35
-    Toronto_Blue_Jays = 36
-    Washington_Nationals = 37
-
+baseballMap = {'Arizona Diamondbacks': 2, 
+          'Atlanta Braves': 3, 
+          'Baltimore Orioles': 4,
+          'Boston Red Sox': 5,
+          'Chicago Cubs': 6,
+          'Chicago White Sox': 7,
+          'Cincinati Reds': 8,
+          'Cleveland Indians': 9,
+          'Colorado Rockies': 10,
+          'Detriot Tigers': 12,
+          'Houston Astros': 15,
+          'Kansas City Royals': 16,
+          'Los Angles Angels': 17,
+          'Los Angles Dodgers': 18,
+          'Miami Marlins': 19,
+          'Milwaukee Brewers': 20,
+          'Minnesota Twins': 22,
+          'New York Mets': 24,
+          'New York Yankees': 25,
+          'Oakland Athletics': 26,
+          'Philadelphia Phillies': 27,
+          'Pittsburgh Pirates': 28,
+          'San Diego Padres': 30,
+          'San Francisco Giants': 31,
+          'Seattle Mariners': 32,
+          'St Louis Cardinals': 33,
+          'Tampa Bay Rays': 34,
+          'Texas Rangers': 35,
+          'Toronto Blue Jays': 36,
+          'Washington Nationals': 37}
 
 currentGameType = None
 currentTeams = []
@@ -94,11 +92,11 @@ class MyClient(discord.Client):
 client = MyClient(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
 
-@tree.command(name = "get_current_games", description = "Get today's scores for the specific sport", guild=discord.Object(id=guildId))
+@tree.command(name = "get-games", description = "Get live scores for todays event", guild=discord.Object(id=guildId))
 async def rent(interaction, type: GameType):
 
   if currentTeams == []:
-    await interaction.response.send_message("No on-going games to display data for")
+    await interaction.response.send_message("No on-going events to display data for")
 
   if (currentGameType == GameType.MLB):
     await createMLBText(interaction)
@@ -109,24 +107,122 @@ async def rent(interaction, type: GameType):
   if (currentGameType == GameType.NFL):
     await interaction.response.send_message("Not available at the moment. Bug Flip :)")
 
-@tree.command(name = "create_game_one", description = "Get today's scores for the specific sport", guild=discord.Object(id=guildId))
-async def help(interaction, type: GameType, team_in_game: Teams):
+@tree.command(name = "create-one-team-event", description = "Create an event with 1 game involved", guild=discord.Object(id=guildId))
+async def help(interaction, type: GameType, team_in_game: str):
     if await checkIfValidUser(interaction):
       return
+    
+    gameTypeMap = await determineTypeMap(interaction, type)
+    
+    teamNames = []
+    keys = []
+
+    teamNames.append(team_in_game)
+
+    for name in teamNames:
+      lower_keys = [key.lower() for key in gameTypeMap.keys()]
+      if name.lower() not in lower_keys:
+          await interaction.response.send_message("Invalid option "+team_in_game+". Please select a valid option. Format Example: Toronto Blue Jays", ephemeral=True)
+          return
+        
+      matched_key = list(gameTypeMap.keys())[lower_keys.index(team_in_game.lower())]
+      keys.append(matched_key)
+
+    global currentGameType 
+    global currentTeams 
     currentGameType = type
+    for key in keys:
+      currentTeams.append(gameTypeMap[key])
     await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
 
-@tree.command(name = "get_flips_state", description = "Get today's scores for the specific sport", guild=discord.Object(id=guildId))
+@tree.command(name = "create-two-team-event", description = "Create an event with 1 game involved", guild=discord.Object(id=guildId))
+async def help(interaction, type: GameType, team_in_game1: str, team_in_game2: str):
+    if await checkIfValidUser(interaction):
+      return
+    
+    gameTypeMap = await determineTypeMap(interaction, type)
+    
+    teamNames = []
+    keys = []
+
+    teamNames.append(team_in_game1)
+    teamNames.append(team_in_game2)
+
+    for name in teamNames:
+      lower_keys = [key.lower() for key in gameTypeMap.keys()]
+      if name.lower() not in lower_keys:
+          await interaction.response.send_message("Invalid option "+name+". Please select a valid option. Format Example: Toronto Blue Jays", ephemeral=True)
+          return
+        
+      matched_key = list(gameTypeMap.keys())[lower_keys.index(name.lower())]
+      keys.append(matched_key)
+
+    global currentGameType 
+    global currentTeams 
+    currentGameType = type
+    for key in keys:
+      currentTeams.append(gameTypeMap[key])
+    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
+
+@tree.command(name = "create-three-team-event", description = "Create an event with 1 game involved", guild=discord.Object(id=guildId))
+async def help(interaction, type: GameType, team_in_game1: str, team_in_game2: str, team_in_game3: str):
+    if await checkIfValidUser(interaction):
+      return
+    
+    gameTypeMap = await determineTypeMap(interaction, type)
+    
+    teamNames = []
+    keys = []
+
+    teamNames.append(team_in_game1)
+    teamNames.append(team_in_game2)
+    teamNames.append(team_in_game3)
+
+    for name in teamNames:
+      lower_keys = [key.lower() for key in gameTypeMap.keys()]
+      if name.lower() not in lower_keys:
+          await interaction.response.send_message("Invalid option "+name+". Please select a valid option. Format Example: Toronto Blue Jays", ephemeral=True)
+          return
+        
+      matched_key = list(gameTypeMap.keys())[lower_keys.index(name.lower())]
+      keys.append(matched_key)
+
+    global currentGameType 
+    global currentTeams 
+    currentGameType = type
+    for key in keys:
+      currentTeams.append(gameTypeMap[key])
+    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
+
+async def determineTypeMap(interaction, type: GameType):
+  if type == GameType.MLB:
+    return baseballMap
+  elif type == GameType.NBA:
+    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
+    return None
+  elif type == GameType.NFL:
+    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
+    return None
+  elif type == GameType.NHL:
+    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
+    return None
+  else:
+    await interaction.response.send_message("Not sure how you got here.")
+    return None
+
+@tree.command(name = "get-flips-state", description = "Get the current state of the bot", guild=discord.Object(id=guildId))
 async def help(interaction):
     if await checkIfValidUser(interaction):
       return
     await interaction.response.send_message(f"Storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
 
-@tree.command(name = "reset_state", description = "Get today's scores for the specific sport", guild=discord.Object(id=guildId))
+@tree.command(name = "reset-state", description = "Reset back to no events state", guild=discord.Object(id=guildId))
 async def reset(interaction):
     if await checkIfValidUser(interaction):
       return
+    global currentGameType 
     currentGameType = None
+    global currentTeams 
     currentTeams = []
     await interaction.response.send_message(f"I have been reset. Storing games for sport: {currentGameType} and teams: {currentTeams}", ephemeral=True)
 
@@ -167,12 +263,13 @@ async def createMLBText(interaction):
     )
   embed.set_thumbnail(url=response[0]["league"]["logo"])
   for game in response:
-    embed.add_field(
-    name=game["teams"]["home"]["name"] + " vs. " + game["teams"]["away"]["name"],
-    value="\n>>> " +
-          "Status: " + game["status"]["long"] +
-          "\nScore: " + str(game["scores"]["home"]["total"]) + " - " + str(game["scores"]["away"]["total"]),
-    inline=False
+    if game["teams"]["home"]["id"] in currentTeams or game["teams"]["away"]["id"] in currentTeams:
+      embed.add_field(
+      name=game["teams"]["home"]["name"] + " vs. " + game["teams"]["away"]["name"],
+      value="\n>>> " +
+            "Status: " + game["status"]["long"] +
+            "\nScore: " + str(game["scores"]["home"]["total"]) + " - " + str(game["scores"]["away"]["total"]),
+      inline=False
   )
   embed.set_footer(text="Games are updated every 15 seconds.")
   await interaction.response.send_message(embed=embed)
