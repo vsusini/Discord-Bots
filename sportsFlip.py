@@ -25,7 +25,7 @@ from enum import Enum
 
 #Data
 
-guildId = 952044361334550548
+guildId = 971056772104200322
 
 
 class GameType(Enum):
@@ -33,6 +33,41 @@ class GameType(Enum):
     NFL = "NFL"
     NHL = "NHL"
     NBA = "NBA"
+
+footballMap = {
+  'Buffalo Bills': 20,
+  'Miami Dolphins': 25,
+  'New England Patriots': 3,
+  'New York Jets': 13,
+  'Cincinnati Bengals': 10,
+  'Baltimore Ravens': 5,
+  'Pittsburgh Steelers': 22,
+  'Cleveland Browns': 9,
+  'Jacksonville Jaguars': 2,
+  'Tennessee Titans': 6,
+  'Indianapolis Colts': 21,
+  'Houston Texans': 26,
+  'Kansas City Chiefs': 17,
+  'Los Angeles Chargers': 30,
+  'Las Vegas Raiders': 1,
+  'Denver Broncos': 28,
+  'Philadelphia Eagles': 12,
+  'Dallas Cowboys': 29,
+  'New York Giants': 4,
+  'Washington Commanders': 18,
+  'Minnesota Vikings': 32,
+  'Detroit Lions': 7,
+  'Green Bay Packers': 15,
+  'Chicago Bears': 16,
+  'Tampa Bay Buccaneers': 24,
+  'Carolina Panthers': 19,
+  'New Orleans Saints': 27,
+  'Atlanta Falcons': 8,
+  'San Francisco 49ers': 14,
+  'Seattle Seahawks': 23,
+  'Los Angeles Rams': 31,
+  'Arizona Cardinals': 11,
+}
 
 baseballMap = {'Arizona Diamondbacks': 2, 
           'Atlanta Braves': 3, 
@@ -65,10 +100,25 @@ baseballMap = {'Arizona Diamondbacks': 2,
           'Toronto Blue Jays': 36,
           'Washington Nationals': 37}
 
+
 currentGameType = None
 currentTeams = []
+ADMIN_ROLE = "RF Master"
 
 # Code
+
+def get_team_names_from_ids(id_list, data_map):
+    team_names = []
+
+    for team_id in id_list:
+        for name, team_id_in_map in data_map.items():
+            if team_id == team_id_in_map:
+                team_names.append(name)
+                break
+        else:
+            team_names.append(None)  # Handle the case when ID is not found in the map
+
+    return team_names
 
 class MyClient(discord.Client):
   def __init__(self, *args, **kwargs):
@@ -88,15 +138,26 @@ class MyClient(discord.Client):
                               activity=discord.Activity(
                                   type=discord.ActivityType.watching,
                                   name=str(string)))
+    
+  async def on_guild_join(self, guild):
+    # When the bot joins a new guild, create a new role
+    role_name = ADMIN_ROLE
+    permissions = discord.Permissions()  # You can customize the permissions here if needed
+    new_role = await guild.create_role(name=role_name, permissions=permissions)
+    # Optionally, you can customize the role color and other settings
+    # new_role = await guild.create_role(name=role_name, permissions=permissions, colour=discord.Colour.orange(), hoist=True)
+    print(f"Created a new role '{role_name}' in guild '{guild.name}'")
+    for guild in self.guilds:
+      await tree.sync(guild= discord.Object(id=guild.id))
 
 client = MyClient(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
 
 @tree.command(name = "get-games", description = "Get live scores for todays event", guild=discord.Object(id=guildId))
-async def rent(interaction, type: GameType):
+async def rent(interaction):
 
   if currentTeams == []:
-    await interaction.response.send_message("No on-going events to display data for")
+    await interaction.response.send_message("No on-going events to display data for.")
 
   if (currentGameType == GameType.MLB):
     await createMLBText(interaction)
@@ -105,9 +166,9 @@ async def rent(interaction, type: GameType):
   if (currentGameType == GameType.NHL):
     await interaction.response.send_message("Not available at the moment. Bug Flip :)")
   if (currentGameType == GameType.NFL):
-    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
+    await createNFLText(interaction)
 
-@tree.command(name = "create-one-team-event", description = "Create an event with 1 game involved", guild=discord.Object(id=guildId))
+@tree.command(name = "create-one-team-event", description = "Create an event with 1 team involved", guild=discord.Object(id=guildId))
 async def help(interaction, type: GameType, team_in_game: str):
     if await checkIfValidUser(interaction):
       return
@@ -133,9 +194,9 @@ async def help(interaction, type: GameType, team_in_game: str):
     currentGameType = type
     for key in keys:
       currentTeams.append(gameTypeMap[key])
-    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
+    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {get_team_names_from_ids(currentTeams, gameTypeMap)}", ephemeral=True)
 
-@tree.command(name = "create-two-team-event", description = "Create an event with 1 game involved", guild=discord.Object(id=guildId))
+@tree.command(name = "create-two-team-event", description = "Create an event with 2 teams involved", guild=discord.Object(id=guildId))
 async def help(interaction, type: GameType, team_in_game1: str, team_in_game2: str):
     if await checkIfValidUser(interaction):
       return
@@ -162,9 +223,9 @@ async def help(interaction, type: GameType, team_in_game1: str, team_in_game2: s
     currentGameType = type
     for key in keys:
       currentTeams.append(gameTypeMap[key])
-    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
+    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {get_team_names_from_ids(currentTeams, gameTypeMap)}", ephemeral=True)
 
-@tree.command(name = "create-three-team-event", description = "Create an event with 1 game involved", guild=discord.Object(id=guildId))
+@tree.command(name = "create-three-team-event", description = "Create an event with 3 teams involved", guild=discord.Object(id=guildId))
 async def help(interaction, type: GameType, team_in_game1: str, team_in_game2: str, team_in_game3: str):
     if await checkIfValidUser(interaction):
       return
@@ -192,7 +253,7 @@ async def help(interaction, type: GameType, team_in_game1: str, team_in_game2: s
     currentGameType = type
     for key in keys:
       currentTeams.append(gameTypeMap[key])
-    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
+    await interaction.response.send_message(f"Successfully storing games for sport: {currentGameType} and team: {get_team_names_from_ids(currentTeams, gameTypeMap)}", ephemeral=True)
 
 async def determineTypeMap(interaction, type: GameType):
   if type == GameType.MLB:
@@ -201,8 +262,7 @@ async def determineTypeMap(interaction, type: GameType):
     await interaction.response.send_message("Not available at the moment. Bug Flip :)")
     return None
   elif type == GameType.NFL:
-    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
-    return None
+    return footballMap
   elif type == GameType.NHL:
     await interaction.response.send_message("Not available at the moment. Bug Flip :)")
     return None
@@ -214,7 +274,10 @@ async def determineTypeMap(interaction, type: GameType):
 async def help(interaction):
     if await checkIfValidUser(interaction):
       return
-    await interaction.response.send_message(f"Storing games for sport: {currentGameType} and team: {currentTeams}", ephemeral=True)
+    
+    gameTypeMap = await determineTypeMap(interaction, currentGameType)
+
+    await interaction.response.send_message(f"Storing games for sport: {currentGameType} and team: {get_team_names_from_ids(currentTeams, gameTypeMap)}", ephemeral=True)
 
 @tree.command(name = "reset-state", description = "Reset back to no events state", guild=discord.Object(id=guildId))
 async def reset(interaction):
@@ -228,7 +291,7 @@ async def reset(interaction):
 
 
 async def checkIfValidUser(interaction):
-  if "SF Master" not in [role.name for role in interaction.user.roles]:
+  if ADMIN_ROLE not in [role.name for role in interaction.user.roles]:
       await interaction.response.send_message(f"Silly {interaction.user}, you don't have permissions to do this command!", ephemeral=True)
       return True
   return False
@@ -238,8 +301,6 @@ async def createMLBText(interaction):
   current_date = datetime.now(tz=ZoneInfo("America/New_York"))
   year = current_date.strftime("%Y")
   formatted_date = current_date.strftime("%Y-%m-%d")
-    
-  print(formatted_date)
 
   url = "https://v1.baseball.api-sports.io/games/?season="+year+"&league=1&date="+formatted_date+"&timezone=America/New_York"
   
@@ -254,8 +315,6 @@ async def createMLBText(interaction):
   
   data = response.json()
   response = data['response']
-  print(data)
-
   embed = discord.Embed(
         title="Live MLB Game Information",
         description="MLB Live Results for "+formatted_date,
@@ -268,6 +327,43 @@ async def createMLBText(interaction):
       name=game["teams"]["home"]["name"] + " vs. " + game["teams"]["away"]["name"],
       value="\n>>> " +
             "Status: " + game["status"]["long"] +
+            "\nScore: " + str(game["scores"]["home"]["total"]) + " - " + str(game["scores"]["away"]["total"]),
+      inline=False
+  )
+  embed.set_footer(text="Games are updated every 15 seconds.")
+  await interaction.response.send_message(embed=embed)
+
+async def createNFLText(interaction):
+  current_date = datetime.now(tz=ZoneInfo("America/New_York"))
+  year = current_date.strftime("%Y")
+  formatted_date = current_date.strftime("%Y-%m-%d")
+
+  
+  url = "https://v1.american-football.api-sports.io/games/?date="+formatted_date+"&timezone=America/New_York"
+  
+  payload='{"league":'+"1"+'"}'
+  payload = payload.replace("'", '"', 40)
+  headers = {
+    'x-rapidapi-key': os.environ['SPORT-TOKEN'],
+    'x-rapidapi-host': 'v1.american-football.api-sports.io'
+  }
+  
+  response = requests.request("GET", url, headers=headers)
+  
+  data = response.json()
+  response = data['response']
+  embed = discord.Embed(
+        title="Live NFL Game Information",
+        description="NFL Live Results for "+formatted_date,
+        color=discord.Color.blue()
+    )
+  embed.set_thumbnail(url=response[0]["league"]["logo"])
+  for game in response:
+    if game["teams"]["home"]["id"] in currentTeams or game["teams"]["away"]["id"] in currentTeams:
+      embed.add_field(
+      name=game["teams"]["home"]["name"] + " vs. " + game["teams"]["away"]["name"],
+      value="\n>>> " +
+            "Status: " + game["game"]["status"]["long"] +
             "\nScore: " + str(game["scores"]["home"]["total"]) + " - " + str(game["scores"]["away"]["total"]),
       inline=False
   )
