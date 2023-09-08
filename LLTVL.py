@@ -58,13 +58,16 @@ tree = app_commands.CommandTree(client)
 
 def getData():
     key = "https://api.lenderlabs.xyz/api/get_ll_volume"
-  
-    # requesting data from url
-    data = requests.get(key)  
-    data = data.json()
-    tvl = round(float(data['ll_tvl']), 2)
-    print(f"{tvl}")
-    return tvl
+    
+    try:
+        # requesting data from URL
+        data = requests.get(key)  
+        data = data.json()
+        tvl = round(float(data['ll_tvl']), 2)
+        return tvl
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return "🔴 Error"
 
       
 client.run(os.environ['DISCORD-TOKEN'])
