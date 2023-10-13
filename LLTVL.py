@@ -31,7 +31,7 @@ class MyClient(discord.Client):
     await self.updateGame("LL Active TVL")
     while True:
       await self.change_bot_nickname()
-      await asyncio.sleep(60*5) #Timer in seconds on how often to update dashboard. 
+      await asyncio.sleep(60*10) #Timer in seconds on how often to update dashboard. 
 
   async def updateGame(self, string):
     print(string)
@@ -42,9 +42,9 @@ class MyClient(discord.Client):
     
   async def change_bot_nickname(self):
         # Change the bot's nickname in the current server
-        tvl = getData()
-        formatted_tvl = f'{tvl:,}'
         try:
+            tvl = getData()
+            formatted_tvl = f'{tvl:,}'
             for guild in self.guilds:
                 await guild.me.edit(nick=formatted_tvl+" Sol")
                 print(f"Changed bot nickname in {guild.name} to {formatted_tvl}")

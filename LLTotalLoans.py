@@ -31,7 +31,7 @@ class MyClient(discord.Client):
     await self.updateGame("LL Active Loans")
     while True:
       await self.change_bot_nickname()
-      await asyncio.sleep(60*5) #Timer in seconds on how often to update dashboard. 
+      await asyncio.sleep(60*10) #Timer in seconds on how often to update dashboard. 
 
   async def updateGame(self, string):
     print(string)
@@ -42,12 +42,12 @@ class MyClient(discord.Client):
     
   async def change_bot_nickname(self):
         # Change the bot's nickname in the current server
-        loans = getData()
-        formatted_loans = f'{loans:,.0f}'
         try:
-            for guild in self.guilds:
-                await guild.me.edit(nick=formatted_loans+" loans")
-                print(f"Changed bot nickname in {guild.name} to {formatted_loans}")
+          loans = getData()
+          formatted_loans = f'{loans:,.0f}'
+          for guild in self.guilds:
+              await guild.me.edit(nick=formatted_loans+" loans")
+              print(f"Changed bot nickname in {guild.name} to {formatted_loans}")
         except discord.errors.Forbidden:
             print("I don't have permission to change my nickname in some server.")
         except discord.errors.HTTPException:
