@@ -100,6 +100,36 @@ baseballMap = {'Arizona Diamondbacks': 2,
           'Toronto Blue Jays': 36,
           'Washington Nationals': 37}
 
+basketBallMap = {'Atlanta Hawks': 132, 
+          'Boston Celtics': 133, 
+          'Brooklyn Nets': 134,
+          'Charlotte Hornets': 135,
+          'Chicago Bulls': 136,
+          'Cleveland Cavaliers': 137,
+          'Dallas Mavericks': 138,
+          'Denver Nuggets': 139,
+          'Detroit Pistons': 140,
+          'Golden State Warriors': 141,
+          'Houston Rockets': 142,
+          'Indiana Pacers': 143,
+          'Los Angeles Clippers': 144,
+          'Los Angeles Lakers': 145,
+          'Miami Heat': 147,
+          'Milwaukee Bucks': 148,
+          'Minnesota Timberwolves': 149,
+          'New Orleans Pelicans': 150,
+          'New York Knicks': 151,
+          'Oklahoma City Thunder': 152,
+          'Orlando Magic': 153,
+          'Philadelphia 76ers': 154,
+          'Phoenix Suns': 155,
+          'Portland Trail Blazers': 156,
+          'Sacramento Kings': 157,
+          'San Antonio Spurs': 158,
+          'Toronto Raptors': 159,
+          'Utah Jazz': 160,
+          'Washington Wizards': 161}
+
 
 currentGameType = None
 currentTeams = []
@@ -131,6 +161,13 @@ class MyClient(discord.Client):
     for guild in self.guilds:
       await tree.sync(guild= discord.Object(id=guild.id))
 
+  async def on_message(self, message):
+    # don't respond to ourselves
+    if message.author == self.user:
+        return
+    if 'soccer' in message.content.lower():
+        await message.channel.send('football*')
+
 
   async def updateGame(self, string):
     print(string)
@@ -150,7 +187,9 @@ class MyClient(discord.Client):
     for guild in self.guilds:
       await tree.sync(guild= discord.Object(id=guild.id))
 
-client = MyClient(intents=discord.Intents.default())
+intents = discord.Intents.default()
+intents.message_content = True
+client = MyClient(intents=intents)
 tree = app_commands.CommandTree(client)
 
 @tree.command(name = "get-games", description = "Get live scores for todays event", guild=discord.Object(id=guildId))
@@ -162,7 +201,7 @@ async def rent(interaction):
   if (currentGameType == GameType.MLB):
     await createMLBText(interaction)
   if (currentGameType == GameType.NBA):
-    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
+    await createNBAText(interaction)
   if (currentGameType == GameType.NHL):
     await interaction.response.send_message("Not available at the moment. Bug Flip :)")
   if (currentGameType == GameType.NFL):
@@ -259,8 +298,7 @@ async def determineTypeMap(interaction, type: GameType):
   if type == GameType.MLB:
     return baseballMap
   elif type == GameType.NBA:
-    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
-    return None
+    return basketBallMap
   elif type == GameType.NFL:
     return footballMap
   elif type == GameType.NHL:
@@ -318,6 +356,43 @@ async def createMLBText(interaction):
   embed = discord.Embed(
         title="Live MLB Game Information",
         description="MLB Live Results for "+formatted_date,
+        color=discord.Color.blue()
+    )
+  embed.set_thumbnail(url=response[0]["league"]["logo"])
+  for game in response:
+    if game["teams"]["home"]["id"] in currentTeams or game["teams"]["away"]["id"] in currentTeams:
+      embed.add_field(
+      name=game["teams"]["home"]["name"] + " vs. " + game["teams"]["away"]["name"],
+      value="\n>>> " +
+            "Status: " + game["status"]["long"] +
+            "\nScore: " + str(game["scores"]["home"]["total"]) + " - " + str(game["scores"]["away"]["total"]),
+      inline=False
+  )
+  embed.set_footer(text="Games are updated every 15 seconds.")
+  await interaction.response.send_message(embed=embed)
+
+async def createNBAText(interaction):
+  current_date = datetime.now(tz=ZoneInfo("America/New_York"))
+  year = current_date.strftime("%Y")
+  newYearRange = year + "-"+str(int(year)+1)
+  formatted_date = current_date.strftime("%Y-%m-%d")
+
+  url = "https://v1.basketball.api-sports.io/games/?season="+newYearRange+"&league=12&date="+formatted_date+"&timezone=America/New_York"
+  
+  payload='{"league":'+"12"+'"}'
+  payload = payload.replace("'", '"', 40)
+  headers = {
+    'x-rapidapi-key': os.environ['SPORT-TOKEN'],
+    'x-rapidapi-host': 'v1.basketball.api-sports.io'
+  }
+  
+  response = requests.request("GET", url, headers=headers)
+  
+  data = response.json()
+  response = data['response']
+  embed = discord.Embed(
+        title="Live NBA Game Information",
+        description="NBA Live Results for "+formatted_date,
         color=discord.Color.blue()
     )
   embed.set_thumbnail(url=response[0]["league"]["logo"])
