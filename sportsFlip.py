@@ -34,6 +34,41 @@ class GameType(Enum):
     NHL = "NHL"
     NBA = "NBA"
 
+hockeyMap = {
+   'Anaheim Ducks': 670,
+   'Arizona Coyotes': 671,
+   'Boston Bruins': 673,
+   'Buffalo Sabres': 674,
+   'Calgary Flames': 675,
+   'Carolina Hurricanes': 676,
+   'Chicago Blackhawks': 678,
+   'Colorado Avalanche': 679,
+   'Columbus Blue Jackets': 680,
+   'Dallas Stars': 681,
+   'Detroit Red Wings': 682,
+   'Edmonton Oilers': 683,
+   'Florida Panthers': 684,
+   'Los Angeles Kings': 685,
+   'Minnesota Wild': 687,
+   'Montreal Canadiens': 688,
+   'Nashville Predators': 689,
+   'New Jersey Devils': 690,
+   'New York Islanders': 691,
+   'New York Rangers': 692,
+   'Ottawa Senators': 693,
+   'Philadelphia Flyers': 695,
+   'Pittsburgh Penguins': 696,
+   'San Jose Sharks': 697,
+   'St. Louis Blues': 698,
+   'Tampa Bay Lightning': 699,
+   'Toronto Maple Leafs': 700,
+   'Vancouver Canucks': 701,
+   'Vegas Golden Knights': 702,
+   'Washington Capitals': 703,
+   'Winnipeg Jets': 704,
+   'Seattle Kraken': 1436
+}
+
 footballMap = {
   'Buffalo Bills': 20,
   'Miami Dolphins': 25,
@@ -203,7 +238,7 @@ async def rent(interaction):
   if (currentGameType == GameType.NBA):
     await createNBAText(interaction)
   if (currentGameType == GameType.NHL):
-    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
+    await createNHLText(interaction)
   if (currentGameType == GameType.NFL):
     await createNFLText(interaction)
 
@@ -302,8 +337,7 @@ async def determineTypeMap(interaction, type: GameType):
   elif type == GameType.NFL:
     return footballMap
   elif type == GameType.NHL:
-    await interaction.response.send_message("Not available at the moment. Bug Flip :)")
-    return None
+    return hockeyMap
   else:
     await interaction.response.send_message("Not sure how you got here.")
     return None
@@ -440,6 +474,44 @@ async def createNFLText(interaction):
       value="\n>>> " +
             "Status: " + game["game"]["status"]["long"] +
             "\nScore: " + str(game["scores"]["home"]["total"]) + " - " + str(game["scores"]["away"]["total"]),
+      inline=False
+  )
+  embed.set_footer(text="Games are updated every 15 seconds.")
+  await interaction.response.send_message(embed=embed)
+
+async def createNHLText(interaction):
+  current_date = datetime.now(tz=ZoneInfo("America/New_York"))
+  year = current_date.strftime("%Y")
+  newYearRange = str(int(year)-1)
+  formatted_date = current_date.strftime("%Y-%m-%d")
+
+  url = "https://v1.hockey.api-sports.io/games/?season="+newYearRange+"&league=57&date="+formatted_date+"&timezone=America/New_York"
+  
+  payload='{"league":'+"57"+'"}'
+  payload = payload.replace("'", '"', 40)
+  headers = {
+    'x-rapidapi-key': os.environ['SPORT-TOKEN'],
+    'x-rapidapi-host': 'v1.hockey.api-sports.io'
+  }
+  
+  response = requests.request("GET", url, headers=headers)
+
+  
+  data = response.json()
+  response = data['response']
+  embed = discord.Embed(
+        title="Live NHL Game Information",
+        description="NHL Live Results for "+formatted_date,
+        color=discord.Color.blue()
+    )
+  embed.set_thumbnail(url=response[0]["league"]["logo"])
+  for game in response:
+    if game["teams"]["home"]["id"] in currentTeams or game["teams"]["away"]["id"] in currentTeams:
+      embed.add_field(
+      name=game["teams"]["home"]["name"] + " vs. " + game["teams"]["away"]["name"],
+      value="\n>>> " +
+            "Status: " + game["status"]["long"] +
+            "\nScore: " + str(game["scores"]["home"]) + " - " + str(game["scores"]["away"]),
       inline=False
   )
   embed.set_footer(text="Games are updated every 15 seconds.")
