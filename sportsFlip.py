@@ -370,11 +370,11 @@ async def checkIfValidUser(interaction):
     
   
 async def createMLBText(interaction):
-  current_date = datetime.now(tz=ZoneInfo("America/New_York"))
+  current_date = datetime.now(tz=ZoneInfo("HST"))
   year = current_date.strftime("%Y")
   formatted_date = current_date.strftime("%Y-%m-%d")
 
-  url = "https://v1.baseball.api-sports.io/games/?season="+year+"&league=1&date="+formatted_date+"&timezone=America/New_York"
+  url = "https://v1.baseball.api-sports.io/games/?season="+year+"&league=1&date="+formatted_date+"&timezone=HST"
   
   payload='{"league":'+"1"+'"}'
   payload = payload.replace("'", '"', 40)
@@ -406,12 +406,12 @@ async def createMLBText(interaction):
   await interaction.response.send_message(embed=embed)
 
 async def createNBAText(interaction):
-  current_date = datetime.now(tz=ZoneInfo("America/New_York"))
+  current_date = datetime.now(tz=ZoneInfo("HST"))
   year = current_date.strftime("%Y")
   newYearRange = year + "-"+str(int(year)+1)
   formatted_date = current_date.strftime("%Y-%m-%d")
 
-  url = "https://v1.basketball.api-sports.io/games/?season="+newYearRange+"&league=12&date="+formatted_date+"&timezone=America/New_York"
+  url = "https://v1.basketball.api-sports.io/games/?season="+newYearRange+"&league=12&date="+formatted_date+"&timezone=HST"
   
   payload='{"league":'+"12"+'"}'
   payload = payload.replace("'", '"', 40)
@@ -443,12 +443,12 @@ async def createNBAText(interaction):
   await interaction.response.send_message(embed=embed)
 
 async def createNFLText(interaction):
-  current_date = datetime.now(tz=ZoneInfo("America/New_York"))
+  current_date = datetime.now(tz=ZoneInfo("HST"))
   year = current_date.strftime("%Y")
   formatted_date = current_date.strftime("%Y-%m-%d")
 
   
-  url = "https://v1.american-football.api-sports.io/games/?date="+formatted_date+"&timezone=America/New_York"
+  url = "https://v1.american-football.api-sports.io/games/?date="+formatted_date+"&timezone=HST"
   
   payload='{"league":'+"1"+'"}'
   payload = payload.replace("'", '"', 40)
@@ -480,12 +480,12 @@ async def createNFLText(interaction):
   await interaction.response.send_message(embed=embed)
 
 async def createNHLText(interaction):
-  current_date = datetime.now(tz=ZoneInfo("America/New_York"))
+  current_date = datetime.now(tz=ZoneInfo("HST"))
   year = current_date.strftime("%Y")
   newYearRange = str(int(year)-1)
   formatted_date = current_date.strftime("%Y-%m-%d")
 
-  url = "https://v1.hockey.api-sports.io/games/?season="+newYearRange+"&league=57&date="+formatted_date+"&timezone=America/New_York"
+  url = "https://v1.hockey.api-sports.io/games/?season="+newYearRange+"&league=57&date="+formatted_date+"&timezone=HST"
   
   payload='{"league":'+"57"+'"}'
   payload = payload.replace("'", '"', 40)
