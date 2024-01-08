@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 import discord
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 
@@ -372,7 +372,7 @@ async def checkIfValidUser(interaction):
 async def createMLBText(interaction):
   current_date = datetime.now(tz=ZoneInfo("America/New_York"))
   year = current_date.strftime("%Y")
-  formatted_date = current_date.strftime("%Y-%m-%d")
+  formatted_date = check_and_adjust_day(current_date).strftime("%Y-%m-%d")
 
   url = "https://v1.baseball.api-sports.io/games/?season="+year+"&league=1&date="+formatted_date+"&timezone=America/New_York"
   
@@ -409,7 +409,7 @@ async def createNBAText(interaction):
   current_date = datetime.now(tz=ZoneInfo("America/New_York"))
   year = current_date.strftime("%Y")
   newYearRange = year + "-"+str(int(year)+1)
-  formatted_date = current_date.strftime("%Y-%m-%d")
+  formatted_date = check_and_adjust_day(current_date).strftime("%Y-%m-%d")
 
   url = "https://v1.basketball.api-sports.io/games/?season="+newYearRange+"&league=12&date="+formatted_date+"&timezone=America/New_York"
   
@@ -445,7 +445,7 @@ async def createNBAText(interaction):
 async def createNFLText(interaction):
   current_date = datetime.now(tz=ZoneInfo("America/New_York"))
   year = current_date.strftime("%Y")
-  formatted_date = current_date.strftime("%Y-%m-%d")
+  formatted_date = check_and_adjust_day(current_date).strftime("%Y-%m-%d")
 
   
   url = "https://v1.american-football.api-sports.io/games/?date="+formatted_date+"&timezone=America/New_York"
@@ -483,7 +483,7 @@ async def createNHLText(interaction):
   current_date = datetime.now(tz=ZoneInfo("America/New_York"))
   year = current_date.strftime("%Y")
   newYearRange = str(int(year)-1)
-  formatted_date = current_date.strftime("%Y-%m-%d")
+  formatted_date = check_and_adjust_day(current_date).strftime("%Y-%m-%d")
 
   url = "https://v1.hockey.api-sports.io/games/?season="+newYearRange+"&league=57&date="+formatted_date+"&timezone=America/New_York"
   
@@ -516,5 +516,22 @@ async def createNHLText(interaction):
   )
   embed.set_footer(text="Games are updated every 15 seconds.")
   await interaction.response.send_message(embed=embed)
+
+def check_and_adjust_day(input_datetime):
+    # Set the timezone to "America/New_York" if not already set
+    if input_datetime.tzinfo is None:
+        input_datetime = input_datetime.replace(tzinfo=ZoneInfo("America/New_York"))
+
+    # Get the time part of the datetime
+    time_part = input_datetime.time()
+
+    # Check if the time is before 12:00:00
+    if time_part < datetime.strptime("12:00:00", "%H:%M:%S").time():
+        # Adjust the day by subtracting 1 day
+        adjusted_datetime = input_datetime - timedelta(days=1)
+    else:
+        adjusted_datetime = input_datetime
+
+    return adjusted_datetime
       
 client.run(os.environ['DISCORD-TOKEN'])
