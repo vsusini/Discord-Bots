@@ -51,7 +51,9 @@ class MyClient(discord.Client):
         except discord.errors.Forbidden:
             print("I don't have permission to change my nickname in some server.")
         except discord.errors.HTTPException:
-            print("Failed to change my nickname in some server.")
+            print(f"Failed to change my nickname in {guild.name} server.")
+        except Exception:
+          await guild.me.edit(nick="🔴 Error")
 
 client = MyClient(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
