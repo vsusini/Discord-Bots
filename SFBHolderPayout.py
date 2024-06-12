@@ -25,6 +25,7 @@ headers = {'User-Agent': 'Mozilla/5.0'}
 class MyClient(discord.Client):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
+    self.channel_id = int(1250441182295756911) #SFB Channel ID
 
   async def on_ready(self):
     print(f"Logged in as {self.user}")
@@ -49,12 +50,29 @@ class MyClient(discord.Client):
             for guild in self.guilds:
                 await guild.me.edit(nick=formatted_string)
                 print(f"Changed bot nickname in {guild.name} to {formatted_string}")
+            await self.update_channel_name(formatted_string + " per SFB")
         except discord.errors.Forbidden:
             print("I don't have permission to change my nickname in some server.")
         except discord.errors.HTTPException:
             print(f"Failed to change my nickname in {guild.name} server.")
         except Exception:
             await guild.me.edit(nick="🔴 Error")
+
+  async def update_channel_name(self, new_name):
+        # Update the channel name
+        try:
+            channel = self.get_channel(self.channel_id)
+            if channel:
+                await channel.edit(name=new_name)
+                print(f"Updated channel name to {new_name}")
+            else:
+                print(f"Channel with ID {self.channel_id} not found")
+        except discord.errors.Forbidden:
+            print("I don't have permission to change the channel name.")
+        except discord.errors.HTTPException as e:
+            print(f"Failed to change the channel name: {e}")
+        except Exception as e:
+            print(f"An error occurred while updating the channel name: {str(e)}")
 
 client = MyClient(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
