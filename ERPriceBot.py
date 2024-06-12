@@ -31,7 +31,7 @@ class MyClient(discord.Client):
     await self.updateGame("ER Price")
     while True:
       await self.change_bot_nickname()
-      await asyncio.sleep(60*10) #Timer in seconds on how often to update dashboard. 
+      await asyncio.sleep(60*30) #Timer in seconds on how often to update dashboard. 
 
   async def updateGame(self, string):
     print(string)
