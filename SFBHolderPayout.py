@@ -46,17 +46,19 @@ class MyClient(discord.Client):
         try:
             solPayout = getData()
             formatted_solPayout = f'{solPayout:,}'
-            formatted_string = formatted_solPayout+" Sol"
+            formatted_string = formatted_solPayout+" SOL"
             for guild in self.guilds:
                 await guild.me.edit(nick=formatted_string)
                 print(f"Changed bot nickname in {guild.name} to {formatted_string}")
-            await self.update_channel_name(formatted_string + " per SFB")
+            await self.update_channel_name("Payout per SFB : "+formatted_string)
         except discord.errors.Forbidden:
             print("I don't have permission to change my nickname in some server.")
         except discord.errors.HTTPException:
             print(f"Failed to change my nickname in {guild.name} server.")
         except Exception:
-            await guild.me.edit(nick="🔴 Error")
+            for guild in self.guilds:
+                await guild.me.edit(nick="🔴 Error")
+                print(f"🔴 Error")
 
   async def update_channel_name(self, new_name):
         # Update the channel name
