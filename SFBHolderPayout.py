@@ -1,7 +1,9 @@
 import os
+import re
 import discord
 import requests
 from datetime import datetime
+import subprocess
 
 from dotenv import load_dotenv
 
@@ -35,6 +37,7 @@ class MyClient(discord.Client):
       await asyncio.sleep(60*10) #Timer in seconds on how often to update dashboard. 
 
   async def updateGame(self, string):
+    print("Updating presense...")
     print(string)
     await self.change_presence(status=discord.Status.online,
                               activity=discord.Activity(
@@ -80,15 +83,18 @@ client = MyClient(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
 
 def getData():
-    key = "https://sfb-backend-service-mainnet.up.railway.app/api/plinko/stats/weekly-fees"
-
-    LAMPORTS_PER_SOL = 1000000000
     
     try:
-        # requesting data from URL
-        data = requests.get(key)  
-        data = data.json()
-        solPayout = round((float(data[0]['total_fees']) / LAMPORTS_PER_SOL * 0.35 / 100), 3)
+        # Getting values from solana cli
+        plinkoTotal = subprocess.check_output(["solana", "balance", "8q3ymvGuCQ2fVjp22eCHDX1AvjwFVKU54eqS56VSbNV1", "-u", "mainnet-beta"], text=True)
+        dashTotal = subprocess.check_output(["solana", "balance", "Dy9KfmcJzRjakx1AwRW29E2mwQrY1jy8zTJ3hZCzW7ea", "-u", "mainnet-beta"], text=True)
+        # Remove SOL from output
+        plinkoTotal = re.search(r"([\d.]+)", plinkoTotal)
+        dashTotal = re.search(r"([\d.]+)", dashTotal)
+         # Convert to floats and calculate payout.
+        dashTotal = float(dashTotal.group(1))
+        plinkoTotal = float(plinkoTotal.group(1))
+        solPayout = round(((dashTotal+plinkoTotal) * 0.35 / 100), 3)
         return solPayout
     except Exception as e:
         print(f"An error occurred: {str(e)}")
